@@ -7,6 +7,7 @@ import base64
 from io import BytesIO
 from google import genai
 from google.genai import types
+from PIL import Image
 
 # Load environment variables
 load_dotenv()
@@ -19,7 +20,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY environment variable is not set")
 
-# Initialize Gemini client
+# Initialize Gemini
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 class ImageGenerationRequest(BaseModel):
@@ -38,15 +39,16 @@ async def generate_images(request: ImageGenerationRequest):
             prompt=request.prompt,
             config=types.GenerateImagesConfig(
                 number_of_images=request.number_of_images,
-            )
+                aspect_ratio='4:3'
+            ),
         )
         
         # Convert images to base64
         base64_images = []
         for generated_image in response.generated_images:
-            # Convert bytes to base64
-            base64_image = base64.b64encode(generated_image.image.image_bytes).decode('utf-8')
-            base64_images.append(base64_image)
+            # Convert bytes to base64 string
+            base64_string = base64.b64encode(generated_image.image.image_bytes).decode('utf-8')
+            base64_images.append(base64_string)
         
         return ImageGenerationResponse(images=base64_images)
     
